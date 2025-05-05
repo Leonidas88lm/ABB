@@ -1,4 +1,4 @@
-package lista
+package listas
 
 type Lista[T any] interface {
 
