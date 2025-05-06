@@ -20,10 +20,12 @@ type diccionarioHash[K comparable, V any] struct {
 	tabla     []TDALista.Lista[entrada[K, V]]
 	cantidad  int
 }
+
 // convertirABytes convierte a un array de bytes la clave recibida
 func convertirABytes[K comparable](clave K) []byte {
 	return []byte(fmt.Sprintf("%v", clave))
 }
+
 // calcularIndice hace un hash con la clave para generar un indice
 func (diccionario *diccionarioHash[K, V]) calcularIndice(clave K, capacidad int) int {
 	bytes := convertirABytes(clave)
@@ -33,6 +35,7 @@ func (diccionario *diccionarioHash[K, V]) calcularIndice(clave K, capacidad int)
 	}
 	return int(hash % uint32(capacidad))
 }
+
 // crearIteradorPosicionado genera un índice con la clave, crea un iterador sobre la lista correspondiente,
 // y lo posiciona en la clave si existe, o al final de la lista si no se encuentra.
 func (diccionario *diccionarioHash[K, V]) crearIteradorPosicionado(clave K) TDALista.IteradorLista[entrada[K, V]] {
@@ -51,22 +54,26 @@ func (diccionario *diccionarioHash[K, V]) crearIteradorPosicionado(clave K) TDAL
 	}
 	return iter
 }
+
 // panicDiccionario devuelve un panic si la lista esta vacia
 func (diccionario *diccionarioHash[K, V]) panicDiccionario(clave K) {
 	if !diccionario.Pertenece(clave) {
 		panic("La clave no pertenece al diccionario")
 	}
 }
+
 // deboAumentar verifica si es necesario incrementar el tamaño del diccionario
 func (diccionario *diccionarioHash[K, V]) deboAumentar(cantidad int, capacidad int) bool {
 	factorCarga := float32(cantidad) / float32(capacidad)
 	return factorCarga >= FACTOR_CARGA_MAXIMO
 }
+
 // debodisminuir verifica si es necesario reducir el tamaño del diccionario
 func (diccionario *diccionarioHash[K, V]) deboDisminuir(cantidad int, capacidad int) bool {
 	factorCarga := float32(cantidad) / float32(capacidad)
 	return (factorCarga <= FACTOR_CARGA_MINIMO)
 }
+
 // rehash moficia el tamaño del diccionario, actualizando cada par clave - valor
 func (diccionario *diccionarioHash[K, V]) rehash(nuevaCapacidad int) {
 	nuevaTabla := make([]TDALista.Lista[entrada[K, V]], nuevaCapacidad)
@@ -129,7 +136,8 @@ func (diccionario *diccionarioHash[K, V]) Borrar(clave K) V {
 func (diccionario *diccionarioHash[K, V]) Cantidad() int {
 	return diccionario.cantidad
 }
-//Recorre todos los elementos del diccionario aplicando la función pasada por parámetro. Si la función retorna false, la iteración se corta.
+
+// Recorre todos los elementos del diccionario aplicando la función pasada por parámetro. Si la función retorna false, la iteración se corta.
 func (diccionario *diccionarioHash[K, V]) Iterar(visitar func(K, V) bool) {
 	for _, lista := range diccionario.tabla {
 		if lista != nil {
@@ -144,19 +152,22 @@ func (diccionario *diccionarioHash[K, V]) Iterar(visitar func(K, V) bool) {
 		}
 	}
 }
-//Devuelve un iterador externo posicionado en el primer elemento del diccionario (si existe).
+
+// Devuelve un iterador externo posicionado en el primer elemento del diccionario (si existe).
 func (diccionario *diccionarioHash[K, V]) Iterador() IterDiccionario[K, V] {
 	iter := &iteradorDiccionario[K, V]{diccionario: diccionario, posLista: 0}
 	iter.avanzar()
 	return iter
 }
-//Estructura auxiliar que mantiene el estado del iterador externo: la posición actual en la tabla y el iterador de la lista actual.
+
+// Estructura auxiliar que mantiene el estado del iterador externo: la posición actual en la tabla y el iterador de la lista actual.
 type iteradorDiccionario[K comparable, V any] struct {
 	diccionario *diccionarioHash[K, V]
 	posLista    int
 	iterLista   TDALista.IteradorLista[entrada[K, V]]
 }
-//Avanza el iterador externo hasta encontrar la próxima lista no vacía con elementos, o llegar al final de la tabla.
+
+// Avanza el iterador externo hasta encontrar la próxima lista no vacía con elementos, o llegar al final de la tabla.
 func (it *iteradorDiccionario[K, V]) avanzar() {
 	for it.posLista < it.diccionario.capacidad {
 		lista := it.diccionario.tabla[it.posLista]
@@ -169,11 +180,13 @@ func (it *iteradorDiccionario[K, V]) avanzar() {
 		it.posLista++
 	}
 }
-//Devuelve true si hay un elemento disponible para visitar en el iterador externo.
+
+// Devuelve true si hay un elemento disponible para visitar en el iterador externo.
 func (it *iteradorDiccionario[K, V]) HaySiguiente() bool {
 	return it.iterLista != nil && it.iterLista.HaySiguiente()
 }
-//Devuelve la clave y el valor actual del iterador. Entra en pánico si el iterador ya terminó.
+
+// Devuelve la clave y el valor actual del iterador. Entra en pánico si el iterador ya terminó.
 func (it *iteradorDiccionario[K, V]) VerActual() (K, V) {
 	if it.iterLista == nil || !it.iterLista.HaySiguiente() {
 		panic("El iterador termino de iterar")
@@ -181,7 +194,8 @@ func (it *iteradorDiccionario[K, V]) VerActual() (K, V) {
 	elem := it.iterLista.VerActual()
 	return elem.clave, elem.valor
 }
-//Avanza el iterador externo al siguiente elemento. Entra en pánico si no hay más elementos.
+
+// Avanza el iterador externo al siguiente elemento. Entra en pánico si no hay más elementos.
 func (it *iteradorDiccionario[K, V]) Siguiente() {
 	if it.iterLista == nil || !it.iterLista.HaySiguiente() {
 		panic("El iterador termino de iterar")
