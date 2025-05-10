@@ -1,5 +1,9 @@
 package diccionario
 
+import (
+	TDAPila "tdas/pila"
+)
+
 type nodoABB[K comparable, V any] struct {
 	clave K
 	dato  V
@@ -144,11 +148,6 @@ func (a *abb[K, V]) iterarInOrder(n *nodoABB[K, V], visitar func(K, V) bool) boo
 	return a.iterarInOrder(n.der, visitar)
 }
 
-func (a *abb[K, V]) Iterador() IterDiccionario[K, V] {
-	// A implementar: iterador externo en orden
-	return nil
-}
-
 func (a *abb[K, V]) IterarRango(desde *K, hasta *K, visitar func(K, V) bool) {
 	a.iterarRango(a.raiz, desde, hasta, visitar)
 }
@@ -174,7 +173,66 @@ func (a *abb[K, V]) iterarRango(n *nodoABB[K, V], desde *K, hasta *K, visitar fu
 	return true
 }
 
-func (a *abb[K, V]) IteradorRango(desde *K, hasta *K) IterDiccionario[K, V] {
-	// A implementar: iterador externo con rango
-	return nil
+// iteradorABB es una estructura auxiliar para implementar el iterador, utilizando una pila como estructura auxiliar
+type iteradorABB[K comparable, V any] struct {
+	pila   TDAPila.Pila[*nodoABB[K, V]]
+	actual *nodoABB[K, V]
+	cmp    func(K, K) int
+	desde  *K
+	hasta  *K
+}
+
+// apilarDesdeHasta apila todos los hijos izquierdos del nodo que recibe, que se encuentren en el rango [desde,hasta].
+//
+//	En caso que un limite sea nil, no lo tiene en cuenta
+func (it *iteradorABB[K, V]) apilarDesdeHasta(nodo *nodoABB[K, V], desde *K, hasta *K) {
+	for nodo != nil {
+
+		if desde != nil && it.cmp(nodo.clave, *desde) < 0 {
+			nodo = nodo.der
+		} else if hasta != nil && it.cmp(nodo.clave, *hasta) > 0 {
+			nodo = nodo.izq
+		} else {
+			it.pila.Apilar(nodo)
+			nodo = nodo.izq
+		}
+	}
+}
+
+func (iterABB *iteradorABB[K, V]) panicIterABB() {
+	if iterABB.pila.EstaVacia() {
+		panic("El iterador termino de iterar")
+	}
+}
+
+func (abb *abb[K, V]) Iterador() IterDiccionario[K, V] {
+	pila := TDAPila.CrearPilaDinamica[*nodoABB[K, V]]()
+	iter := &iteradorABB[K, V]{pila: pila, cmp: abb.cmp, desde: nil, hasta: nil}
+	iter.apilarDesdeHasta(abb.raiz, iter.desde, iter.hasta)
+	return iter
+}
+
+func (abb *abb[K, V]) IteradorRango(desde *K, hasta *K) IterDiccionario[K, V] {
+	pila := TDAPila.CrearPilaDinamica[*nodoABB[K, V]]()
+	iter := &iteradorABB[K, V]{pila: pila, cmp: abb.cmp, desde: desde, hasta: hasta}
+	iter.apilarDesdeHasta(abb.raiz, iter.desde, iter.hasta)
+	return iter
+}
+
+func (iterABB *iteradorABB[K, V]) HaySiguiente() bool {
+	return !iterABB.pila.EstaVacia()
+}
+
+func (iterABB *iteradorABB[K, V]) VerActual() (K, V) {
+	iterABB.panicIterABB()
+	nodoActual := iterABB.pila.VerTope()
+	return nodoActual.clave, nodoActual.dato
+}
+
+func (iterABB *iteradorABB[K, V]) Siguiente() {
+	iterABB.panicIterABB()
+	nodoActual := iterABB.pila.Desapilar()
+	if iterABB.actual.der != nil {
+		iterABB.apilarDesdeHasta(nodoActual.der, iterABB.desde, iterABB.hasta)
+	}
 }
