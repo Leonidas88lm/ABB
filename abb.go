@@ -232,7 +232,12 @@ func (iterABB *iteradorABB[K, V]) VerActual() (K, V) {
 func (iterABB *iteradorABB[K, V]) Siguiente() {
 	iterABB.panicIterABB()
 	nodoActual := iterABB.pila.Desapilar()
-	if iterABB.actual.der != nil {
-		iterABB.apilarDesdeHasta(nodoActual.der, iterABB.desde, iterABB.hasta)
+	if nodoActual != nil {
+		iterABB.actual = nodoActual
+		if iterABB.actual.der != nil {
+			iterABB.apilarDesdeHasta(nodoActual.der, iterABB.desde, iterABB.hasta)
+		}
+	} else {
+		panic("El iterador terminó de iterar")
 	}
 }
