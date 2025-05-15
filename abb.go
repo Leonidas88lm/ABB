@@ -199,7 +199,7 @@ func (it *iteradorABB[K, V]) apilarDesdeHasta(nodo *nodoABB[K, V], desde *K, has
 }
 
 func (iterABB *iteradorABB[K, V]) panicIterABB() {
-	if iterABB.pila.EstaVacia() {
+	if !iterABB.HaySiguiente() {
 		panic("El iterador termino de iterar")
 	}
 }
