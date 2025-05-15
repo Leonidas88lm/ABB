@@ -175,11 +175,10 @@ func (a *abb[K, V]) iterarRango(n *nodoABB[K, V], desde *K, hasta *K, visitar fu
 
 // iteradorABB es una estructura auxiliar para implementar el iterador, utilizando una pila como estructura auxiliar
 type iteradorABB[K comparable, V any] struct {
-	pila   TDAPila.Pila[*nodoABB[K, V]]
-	actual *nodoABB[K, V]
-	cmp    func(K, K) int
-	desde  *K
-	hasta  *K
+	pila  TDAPila.Pila[*nodoABB[K, V]]
+	cmp   func(K, K) int
+	desde *K
+	hasta *K
 }
 
 // apilarDesdeHasta apila todos los hijos izquierdos del nodo que recibe, que se encuentren en el rango [desde,hasta].
@@ -232,12 +231,7 @@ func (iterABB *iteradorABB[K, V]) VerActual() (K, V) {
 func (iterABB *iteradorABB[K, V]) Siguiente() {
 	iterABB.panicIterABB()
 	nodoActual := iterABB.pila.Desapilar()
-	if nodoActual != nil {
-		iterABB.actual = nodoActual
-		if iterABB.actual.der != nil {
-			iterABB.apilarDesdeHasta(nodoActual.der, iterABB.desde, iterABB.hasta)
-		}
-	} else {
-		panic("El iterador terminó de iterar")
+	if nodoActual.der != nil {
+		iterABB.apilarDesdeHasta(nodoActual.der, iterABB.desde, iterABB.hasta)
 	}
 }
